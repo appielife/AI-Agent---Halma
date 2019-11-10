@@ -208,6 +208,12 @@ class Halma():
         return moves
 
     def get_moves_at_tile(self, tile, player, moves=None, adj=True):
+        basemoves =[]
+
+        if(self.c_player==):
+            basemoves =self.w_goals
+        else:
+            basemoves =  self.b_goals
 
         if moves is None:
             moves = []
@@ -251,7 +257,10 @@ class Halma():
 
                 if new_tile.piece == Tile.P_NONE:
                     if adj:  # Don't consider adjacent on subsequent calls
-                        moves.append(new_tile)
+                        if new_tile in basemoves:
+                            moves.append(new_tile)
+                        else: #priortize moves which takes the player out
+                            moves.insert(new_tile)
                     continue
                 
 

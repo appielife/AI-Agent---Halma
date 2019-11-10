@@ -74,10 +74,15 @@ class HalmaAIAgent():
         if maxing:
             best_val = float("-inf")
             moves = self.find_moves(player_to_max)
+            # for idx,fro in enumerate(moves):
+            #     print('From \n', fro['from'].xy_loc)
+            #     for idx,to in enumerate(fro['to']):
+            #         print('\n To:', to.xy_loc)
         else:
             best_val = float("inf")
             moves = self.find_moves((BOX.P_BLACK
                                          if player_to_max == BOX.P_WHITE else BOX.P_WHITE))
+        
         for move in moves:
             for to in move["to"]:
                 if time.time() > max_time:
@@ -107,6 +112,7 @@ class HalmaAIAgent():
         moves = [] 
         basemoves =[]
         look_out = True
+        outMove=False
         if(self.c_player==1):
             basemoves =self.w_goals
         else:
@@ -118,15 +124,30 @@ class HalmaAIAgent():
             
             for node in filtered_moves:
                 curr_tile = node
+                filtered_to=[]
                 if(player == curr_tile.men):
                     next_tiles =self.get_moves_at_tile(curr_tile, player)
                     if(len(next_tiles)):
                         look_out=False
-                    move = {
+                    for x in filter(lambda x: x not in basemoves,next_tiles):
+                        filtered_to.append(x)
+                        outMove=True 
+                    if(len(filtered_moves)>=1):
+                        move = {
+                                "from": curr_tile,
+                                "to": filtered_to
+                            }
+                        moves.append(move)
+
+                    elif not outMove:                                                 
+                        move = {
                                 "from": curr_tile,
                                 "to": next_tiles
-                            }
-                    moves.append(move)
+                            } 
+                        moves.append(move)                                     
+
+
+                       
         if(look_out):
             for col in range(self.b_size):
                 for row in range(self.b_size):
@@ -143,9 +164,16 @@ class HalmaAIAgent():
     def get_moves_at_tile(self, tile, player, moves=None, adj=True):
         if moves is None:
             moves = []
+        # if priority_moves is None:
+        #     priority_moves=[]
         row = tile.xy_loc[0]
         col = tile.xy_loc[1]
         valid_tiles = [BOX.T_NONE, BOX.T_WHITE, BOX.T_BLACK]
+        # basemoves =[]
+        # if(self.c_player==1):
+        #     basemoves =self.w_goals
+        # else:
+        #     basemoves =  self.b_goals
         if tile.tile != player:
             valid_tiles.remove(player) 
         if tile.tile != BOX.T_NONE and tile.tile != player:
@@ -167,8 +195,12 @@ class HalmaAIAgent():
                 if new_tile.tile not in valid_tiles:
                     continue
                 if new_tile.men == BOX.P_NONE:
-                    if adj:  
+                    if adj:
                         moves.append(new_tile)
+                        # if new_tile in basemoves:
+                        #     moves.append(new_tile)
+                        # else:
+                        #     priority_moves.append(new_tile)
                     continue
                 
                 new_row = new_row + row_delta
@@ -179,11 +211,21 @@ class HalmaAIAgent():
                 new_tile = self.board[new_row][new_col]
                 if new_tile in moves or (new_tile.tile not in valid_tiles):
                     continue
+                # if new_tile in priority_moves or (new_tile.tile not in valid_tiles):
+                #     continue                
                 if new_tile.men == BOX.P_NONE:
               
                     new_tile.fromPath = [row, col]
-                    moves.insert(0, new_tile)
+                    moves.insert(0,new_tile)
+                    # if new_tile in basemoves:
+                    #     moves.insert(0,new_tile)
+                    # else:
+                    #     priority_moves.insert(0,new_tile)
                     self.get_moves_at_tile(new_tile, player, moves, False)
+
+        # if(len(priority_moves)):
+        #     return priority_moves            
+        # else: 
         return moves
     def get_moves_at_tile_withoutJumps(self, tile, player, moves=None, adj=True):
         if moves is None:
