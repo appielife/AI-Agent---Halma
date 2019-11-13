@@ -53,7 +53,7 @@ class HalmaAIAgent():
         self.readBoard()
         self.c_player = BOX.P_WHITE if self.player == 'WHITE' else BOX.P_BLACK
         self.current_player = self.c_player
-        self.ply_depth = 3
+        self.ply_depth = 2
         self.ab_enabled = True
         self.b_goals = [t for row in self.board
                         for t in row if t.tile == BOX.T_BLACK]
