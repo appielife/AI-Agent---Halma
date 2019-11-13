@@ -53,7 +53,10 @@ class HalmaAIAgent():
         self.readBoard()
         self.c_player = BOX.P_WHITE if self.player == 'WHITE' else BOX.P_BLACK
         self.current_player = self.c_player
-        self.ply_depth = 2
+        if(self.remainingTime>50):
+            self.ply_depth = 3
+        else:
+            self.ply_depth =2
         self.ab_enabled = True
         self.b_goals = [t for row in self.board
                         for t in row if t.tile == BOX.T_BLACK]
@@ -126,13 +129,23 @@ class HalmaAIAgent():
                 curr_tile = node
                 filtered_to=[]
                 if(player == curr_tile.men):
+                    # row = curr_tile.xy_loc[0]
+                    # col = curr_tile.xy_loc[1]
+                    # if(row==2 and col ==3):
+                    #     print('a')
                     next_tiles =self.get_moves_at_tile(curr_tile, player)
                     if(len(next_tiles)):
                         look_out=False
-                    for x in filter(lambda x: x not in basemoves,next_tiles):
+                    for x in filter(lambda x: x not in basemoves ,next_tiles):
+                        if(x.tile==player):
+                            if(curr_tile.tile==2 and (x.xy_loc[0]<curr_tile.xy_loc[0] or x.xy_loc[1]<curr_tile.xy_loc[1])):
+                                continue
+                            if(curr_tile.tile ==1 and (x.xy_loc[0]>curr_tile.xy_loc[0] or x.xy_loc[1]>curr_tile.xy_loc[1])):
+                                continue
                         filtered_to.append(x)
-                        outMove=True 
-                    if(len(filtered_moves)>=1):
+                        if(len(filtered_to)>=1):
+                            outMove=True 
+                    if(len(filtered_to)>=1):
                         move = {
                                 "from": curr_tile,
                                 "to": filtered_to
@@ -144,7 +157,8 @@ class HalmaAIAgent():
                                 "from": curr_tile,
                                 "to": next_tiles
                             } 
-                        moves.append(move)                                     
+                        moves.append(move)     
+                                                
 
 
                        
@@ -168,6 +182,7 @@ class HalmaAIAgent():
         #     priority_moves=[]
         row = tile.xy_loc[0]
         col = tile.xy_loc[1]
+
         valid_tiles = [BOX.T_NONE, BOX.T_WHITE, BOX.T_BLACK]
         # basemoves =[]
         # if(self.c_player==1):
@@ -182,15 +197,17 @@ class HalmaAIAgent():
             for row_delta in range(-1, 2):
                 new_row = row + row_delta
                 new_col = col + col_delta
+                if(new_row==3 and new_col ==2 and col ==3 and row ==2):
+                 print('a')
                 if ((new_row == row and new_col == col) or
                     new_row < 0 or new_col < 0 or
                         new_row >= self.b_size or new_col >= self.b_size):
                     continue
-                if(tile.tile==player):
-                    if(tile.tile==2 and (new_row<row or new_col<col)):
-                        continue
-                    if(tile.tile ==1 and (new_row>row or new_col > col)):
-                        continue
+                # if(tile.tile==player):
+                #     if(tile.tile==2 and (new_row<row or new_col<col)):
+                #         continue
+                #     if(tile.tile ==1 and (new_row>row or new_col > col)):
+                #         continue
                 new_tile = self.board[new_row][new_col]
                 if new_tile.tile not in valid_tiles:
                     continue
@@ -205,19 +222,22 @@ class HalmaAIAgent():
                 
                 new_row = new_row + row_delta
                 new_col = new_col + col_delta
+                if(new_row==4 and new_col ==1 and col ==3 and row ==2):
+                    print('a')
                 if (new_row < 0 or new_col < 0 or
                         new_row >= self.b_size or new_col >= self.b_size):
                     continue
                 new_tile = self.board[new_row][new_col]
-                if new_tile in moves or (new_tile.tile not in valid_tiles):
+                if new_tile in moves or new_tile.tile not in valid_tiles :                  
                     continue
+                    # if(tile.tile !=player):
+                    #     continue
                 # if new_tile in priority_moves or (new_tile.tile not in valid_tiles):
                 #     continue                
                 if new_tile.men == BOX.P_NONE:
-              
                     new_tile.fromPath = [row, col]
                     moves.insert(0,new_tile)
-                    # if new_tile in basemoves:
+                    # if new_tile in basemoves:s
                     #     moves.insert(0,new_tile)
                     # else:
                     #     priority_moves.insert(0,new_tile)
@@ -245,13 +265,12 @@ class HalmaAIAgent():
                     new_row < 0 or new_col < 0 or
                         new_row >= self.b_size or new_col >= self.b_size):
                     continue
-                
-                if(tile.tile==player):
-                    if(tile.tile==2 and (new_row<row or new_col<col)):
-                        continue
-                    if(tile.tile ==1 and (new_row>row or new_col > col)):
-                        continue
                 new_tile = self.board[new_row][new_col]
+                # if(tile.tile==player and new_tile.tile==player):
+                    # if(tile.tile==2 and (new_row<row or new_col<col)):
+                    #     continue
+                    # if(tile.tile ==1 and (new_row>row or new_col > col)):
+                    #     continue
                 if new_tile.tile not in valid_tiles:
                     continue
                 if new_tile.men == BOX.P_NONE:
