@@ -77,6 +77,11 @@ class HalmaAIAgent():
         if maxing:
             best_val = float("-inf")
             moves = self.find_moves(player_to_max)
+            if len(moves)<1:
+                print('as')
+                moves = self.find_moves(player_to_max,force_look_out=True)
+
+
             # for idx,fro in enumerate(moves):
             #     print('From \n', fro['from'].xy_loc)
             #     for idx,to in enumerate(fro['to']):
@@ -111,7 +116,7 @@ class HalmaAIAgent():
                 if self.ab_enabled and b <= a:
                     return best_val, best_move, prunes + 1, boards
         return best_val, best_move, prunes, boards
-    def find_moves(self, player=1):
+    def find_moves(self, player=1, force_look_out=False):
         moves = [] 
         basemoves =[]
         look_out = True
@@ -129,15 +134,17 @@ class HalmaAIAgent():
                 curr_tile = node
                 filtered_to=[]
                 if(player == curr_tile.men):
-                    # row = curr_tile.xy_loc[0]
-                    # col = curr_tile.xy_loc[1]
-                    # if(row==2 and col ==3):
-                    #     print('a')
+                    row = curr_tile.xy_loc[0]
+                    col = curr_tile.xy_loc[1]
+                    # if(row==3 and col ==2):
+                        # print('a')
                     next_tiles =self.get_moves_at_tile(curr_tile, player)
-                    if(len(next_tiles)):
+                    if(len(next_tiles)>=1):
                         look_out=False
                     for x in filter(lambda x: x not in basemoves ,next_tiles):
                         if(x.tile==player):
+                            # if(x.xy_loc[1]==3 and x.xy_loc[0]==2):
+                                # print('ab')
                             if(curr_tile.tile==2 and (x.xy_loc[0]<curr_tile.xy_loc[0] or x.xy_loc[1]<curr_tile.xy_loc[1])):
                                 continue
                             if(curr_tile.tile ==1 and (x.xy_loc[0]>curr_tile.xy_loc[0] or x.xy_loc[1]>curr_tile.xy_loc[1])):
@@ -152,27 +159,75 @@ class HalmaAIAgent():
                             }
                         moves.append(move)
 
-                    elif not outMove:                                                 
-                        move = {
-                                "from": curr_tile,
-                                "to": next_tiles
-                            } 
-                        moves.append(move)     
+                    elif not outMove:
+                        for x in filter(lambda x: x  in basemoves ,next_tiles): 
+                            if(x.tile==player):
+                                # if(x.xy_loc[1]==3 and x.xy_loc[0]==2):
+                                    # print('ab')
+                                if(curr_tile.tile==2 and (x.xy_loc[0]<curr_tile.xy_loc[0] or x.xy_loc[1]<curr_tile.xy_loc[1])):
+                                    next_tiles.remove(x)
+                                    continue
+                                if(curr_tile.tile ==1 and (x.xy_loc[0]>curr_tile.xy_loc[0] or x.xy_loc[1]>curr_tile.xy_loc[1])):
+                                    next_tiles.remove(x)
+                                    continue                                                
+                        
+                        if(len(next_tiles)>=1):
+                            move = {
+                                    "from": curr_tile,
+                                    "to": next_tiles
+                                }
+                            moves.append(move)     
+                        # else:
+                            # look_out=True
                                                 
 
 
-                       
-        if(look_out):
+        if(look_out or force_look_out):
             for col in range(self.b_size):
                 for row in range(self.b_size):
                     curr_tile = self.board[row][col]
                     if curr_tile.men != player:
-                        continue               
-                    move = {
-                        "from": curr_tile,
-                        "to": self.get_moves_at_tile(curr_tile, player)
-                    }
-                    moves.append(move)
+                        continue  
+                    next_tiles =self.get_moves_at_tile(curr_tile, player)                   
+                    if(len(next_tiles)>=1):
+                        move = {
+                                "from": curr_tile,
+                                "to": next_tiles
+                            }
+                        moves.append(move)
+
+
+                                # if(look_out or force_look_out):
+        #     for col in range(self.b_size):
+        #         for row in range(self.b_size):
+        #             curr_tile = self.board[row][col]
+        #             if curr_tile.men != player:
+        #                 continue  
+        #             next_tiles =self.get_moves_at_tile(curr_tile, player)
+        #             for x in filter(lambda x: x  in basemoves ,next_tiles):
+        #                 if(x.xy_loc[0]<curr_tile.xy_loc[0] or x.xy_loc[1]<curr_tile.xy_loc[1]):
+        #                     next_tiles.remove(x)
+        #                     continue
+        #                 if(x.xy_loc[0]>curr_tile.xy_loc[0] or x.xy_loc[1]>curr_tile.xy_loc[1]):
+        #                     next_tiles.remove(x)
+        #                     continue 
+        #             if(len(next_tiles)>=1):
+        #                 move = {
+        #                         "from": curr_tile,
+        #                         "to": next_tiles
+        #                     }
+        #                 moves.append(move)
+
+
+
+
+
+            
+                    # move = {
+                    #     "from": curr_tile,
+                    #     "to": self.get_moves_at_tile(curr_tile, player)
+                    # }
+                    # moves.append(move)
             
         return moves
     def get_moves_at_tile(self, tile, player, moves=None, adj=True):
@@ -197,8 +252,8 @@ class HalmaAIAgent():
             for row_delta in range(-1, 2):
                 new_row = row + row_delta
                 new_col = col + col_delta
-                if(new_row==3 and new_col ==2 and col ==3 and row ==2):
-                 print('a')
+                # if(new_row==3 and new_col ==2 and col ==3 and row ==2):
+                #  print('a')
                 if ((new_row == row and new_col == col) or
                     new_row < 0 or new_col < 0 or
                         new_row >= self.b_size or new_col >= self.b_size):
@@ -222,8 +277,8 @@ class HalmaAIAgent():
                 
                 new_row = new_row + row_delta
                 new_col = new_col + col_delta
-                if(new_row==4 and new_col ==1 and col ==3 and row ==2):
-                    print('a')
+                # if(new_row==4 and new_col ==1 and col ==3 and row ==2):
+                #     print('a')
                 if (new_row < 0 or new_col < 0 or
                         new_row >= self.b_size or new_col >= self.b_size):
                     continue
