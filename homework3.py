@@ -53,7 +53,7 @@ class HalmaAIAgent():
         self.readBoard()
         self.c_player = BOX.P_WHITE if self.player == 'WHITE' else BOX.P_BLACK
         self.current_player = self.c_player
-        if(self.remainingTime>50):
+        if(self.remainingTime>300):
             self.ply_depth = 3
         else:
             self.ply_depth =2
