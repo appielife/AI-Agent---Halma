@@ -48,15 +48,18 @@ class HalmaAIAgent():
         self.game_type = self.lineObj[0].rstrip()
         self.player = self.lineObj[1].rstrip()
         self.remainingTime = float(self.lineObj[2].rstrip())
+        self.remainingTime=self.remainingTime/2
         self.board = [[None] * 16 for _ in range(16)]
         self.initiateBoard()
         self.readBoard()
         self.c_player = BOX.P_WHITE if self.player == 'WHITE' else BOX.P_BLACK
         self.current_player = self.c_player
-        if(self.remainingTime>300):
-            self.ply_depth = 3
+        if(self.remainingTime<25 or self.remainingTime>286):
+            self.ply_depth = 1
+        elif(self.remainingTime<75 or self.remainingTime>200):
+            self.ply_depth =3
         else:
-            self.ply_depth =2
+            self.ply_depth=2
         self.ab_enabled = True
         self.b_goals = [t for row in self.board
                         for t in row if t.tile == BOX.T_BLACK]
