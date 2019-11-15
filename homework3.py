@@ -35,11 +35,30 @@ class HalmaAIAgent():
             for y, content in enumerate(target_xy):
                 if content == 'B':
                     self.board[y][x-3].men = 2
+                    if(self.board[y][x-3].men == self.board[y][x-3].tile):
+                        self.blackInBlack+=1
+                    if(self.board[y][x-3].tile == BOX.P_WHITE):
+                        self.blackInWhite+=1
+                    if(self.board[y][x-3].tile == BOX.P_NONE):
+                        self.blackInOpen+=1                    
                 elif content == 'W':
                     self.board[y][x-3].men = 1
+                    if(self.board[y][x-3].men == self.board[y][x-3].tile):
+                        self.whiteInWhite+=1
+                    if(self.board[y][x-3].tile == BOX.P_WHITE):
+                        self.whiteInBlack+=1
+                    if(self.board[y][x-3].tile == BOX.P_NONE):
+                         self.whiteInOpen+=1   
                 elif content == '.':
                     self.board[y][x-3].men = 0
+
     def __init__(self):
+        self.blackInBlack=0
+        self.blackInWhite=0
+        self.blackInOpen=0
+        self.whiteInOpen=0                   
+        self.whiteInWhite=0
+        self.whiteInBlack=0
         self.filePath_in = 'input.txt'
         self.filePath_out = 'output.txt'
         self.b_size = 16
@@ -48,18 +67,50 @@ class HalmaAIAgent():
         self.game_type = self.lineObj[0].rstrip()
         self.player = self.lineObj[1].rstrip()
         self.remainingTime = float(self.lineObj[2].rstrip())
-        self.remainingTime=self.remainingTime/2
+        self.maxMoveTime= time.time() + min(self.remainingTime*0.175,15)
+        # self.remainingTime=self.remainingTime/2
         self.board = [[None] * 16 for _ in range(16)]
         self.initiateBoard()
         self.readBoard()
+
         self.c_player = BOX.P_WHITE if self.player == 'WHITE' else BOX.P_BLACK
         self.current_player = self.c_player
-        if(self.remainingTime<25 or self.remainingTime>286):
-            self.ply_depth = 1
-        elif(self.remainingTime<75 or self.remainingTime>200):
-            self.ply_depth =3
+        
+        if(self.current_player==BOX.P_BLACK):
+            if(self.remainingTime<20):
+                self.ply_depth=1
+            elif(self.remainingTime<60):
+                self.ply_depth=2         
+            elif(self.blackInWhite>10):
+                self.ply_depth=3
+            elif(self.blackInOpen+self.whiteInOpen>30):
+                self.ply_depth=1
+            elif(self.whiteInBlack>17):
+                self.ply_depth=1
+            else:
+                self.ply_depth=2
         else:
-            self.ply_depth=2
+            if(self.remainingTime<20):
+                self.ply_depth=1
+            elif(self.remainingTime<60):
+                self.ply_depth=2               
+            elif(self.whiteInBlack>7):
+                self.ply_depth=3
+            elif(self.blackInOpen+self.whiteInOpen>30):
+                self.ply_depth=1
+            elif(self.blackInWhite>17):
+                self.ply_depth=1
+            else:
+                self.ply_depth=2
+
+
+        
+        # if(self.remainingTime<37 or self.remainingTime>270):
+        #     self.ply_depth = 1
+        # elif(self.remainingTime<75 or self.remainingTime>175):
+        #     self.ply_depth =3
+        # else:
+        #     self.ply_depth=2
         self.ab_enabled = True
         self.b_goals = [t for row in self.board
                         for t in row if t.tile == BOX.T_BLACK]
@@ -74,7 +125,7 @@ class HalmaAIAgent():
         self.move_piece(move_from, move_to)
     def minimax(self, depth, player_to_max, max_time, a=float("-inf"),
                 b=float("inf"), maxing=True, prunes=0, boards=0):
-        if depth == 0 or self.isWinner() or time.time() > max_time:
+        if depth == 0 or self.isWinner() or time.time() > max_time or time.time() > self.maxMoveTime:
             return self.evaluating_function(player_to_max), None, prunes, boards
         best_move = None
         if maxing:
@@ -372,11 +423,11 @@ class HalmaAIAgent():
                 if tile.men == BOX.P_WHITE:
                     distances = [point_distance(tile.xy_loc, g.xy_loc) for g in
                                  self.b_goals if g.men != BOX.P_WHITE]
-                    value -= max(distances) if len(distances) else -50
+                    value -= max(distances) if len(distances) else -300
                 elif tile.men == BOX.P_BLACK:
                     distances = [point_distance(tile.xy_loc, g.xy_loc) for g in
                                  self.w_goals if g.men != BOX.P_BLACK]
-                    value += max(distances) if len(distances) else -50
+                    value += max(distances) if len(distances) else -300
         if player == BOX.P_BLACK:
             value *= -1
         return value
@@ -417,7 +468,7 @@ class HalmaAIAgent():
                 ' '+str(x[0])+','+str(x[1])
             temp += temp_a.lstrip()+'\n'
         temp = temp.rstrip()
-        print(temp)
+        # print(temp)
         with open(self.filePath_out, 'w+') as fp:
             fp.write(temp)
 if __name__ == "__main__":
